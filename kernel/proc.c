@@ -295,6 +295,9 @@ fork(void)
 
   np->state = RUNNABLE;
 
+  /* trace in child too */
+  np->mask = p->mask;
+
   release(&np->lock);
 
   return pid;
@@ -692,4 +695,14 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+int used_number(void) {
+  int n = 0;
+  for(struct proc *p = proc; p < (proc + NPROC); p++) {
+    if (p->state != UNUSED) {
+      n++;
+    }
+  }
+  return n;
 }
