@@ -24,6 +24,8 @@ kvminit()
   kernel_pagetable = (pagetable_t) kalloc();
   memset(kernel_pagetable, 0, PGSIZE);
 
+  // map devices address
+
   // uart registers
   kvmmap(UART0, UART0, PGSIZE, PTE_R | PTE_W);
 
@@ -68,6 +70,9 @@ kvminithart()
 //   21..29 -- 9 bits of level-1 index.
 //   12..20 -- 9 bits of level-0 index.
 //    0..11 -- 12 bits of byte offset within the page.
+// -----------------38--------29-------20-------11--------0
+// |      extra      |   i2    |   i1   |   i0   | offset |
+// --------------------------------------------------------
 pte_t *
 walk(pagetable_t pagetable, uint64 va, int alloc)
 {
@@ -439,4 +444,22 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
   } else {
     return -1;
   }
+}
+
+void vmprint_level(pagetable_t pgtbl, int level) {
+  if (level > 3) return;
+  for (int i = 0; i < 512; i++) {
+    if ((pgtbl[i] & PTE_V) == 0) continue;
+    printf("..");
+    for (int j = 1; j < level; j++)
+      printf(" ..");
+    printf("%d: pte %p pa %p\n", i, (void *)(pgtbl[i]), PTE2PA(pgtbl[i]));
+    uint64 child = PTE2PA(pgtbl[i]);
+    vmprint_level((pagetable_t) child, level + 1);
+  }
+}
+
+void vmprint(pagetable_t pgtbl) {
+  printf("page table %p\n", (void *)pgtbl);
+  vmprint_level(pgtbl, 1);
 }

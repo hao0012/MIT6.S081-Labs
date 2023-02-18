@@ -350,5 +350,7 @@ sfence_vma()
 // that have the high bit set.
 #define MAXVA (1L << (9 + 9 + 9 + 12 - 1))
 
+// a PTE is 64 bits
 typedef uint64 pte_t;
+// a pagetable_t is an array of PTE, length is 512 
 typedef uint64 *pagetable_t; // 512 PTEs
