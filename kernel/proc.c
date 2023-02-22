@@ -126,8 +126,6 @@ found:
   // map in kpagetable
   kernel_map(p->kpagetable, va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
   p->kstack = va;
-  // map in kernel_pagetable
-  kvmmap(va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
 
   // Set up new context to start executing at forkret,
   // which returns to user space.
@@ -219,9 +217,6 @@ void proc_kfreepagetable(struct proc *p) {
 
   // unmap the last and free kernel pagetable 
   k_freewalk(k);
-
-  // unmap in kernel_pagetable
-  uvmunmap(kernel_pagetable, p->kstack, 1, 0);
 }
 
 // a user program that calls exec("/init")
@@ -250,6 +245,8 @@ userinit(void)
   uvminit(p->pagetable, initcode, sizeof(initcode));
   p->sz = PGSIZE;
 
+  // lab part3
+  utokcopy(p->pagetable, p->kpagetable, 0, p->sz);
   // prepare for the very first "return" from kernel to user.
   p->trapframe->epc = 0;      // user program counter
   p->trapframe->sp = PGSIZE;  // user stack pointer
@@ -269,14 +266,18 @@ growproc(int n)
 {
   uint sz;
   struct proc *p = myproc();
-
   sz = p->sz;
+  uint oldsz = sz;
   if(n > 0){
     if((sz = uvmalloc(p->pagetable, sz, sz + n)) == 0) {
       return -1;
     }
+    if (utokcopy(p->pagetable, p->kpagetable, oldsz, n) < 0) {
+      panic("growproc: utokcopy error");
+    }
   } else if(n < 0){
     sz = uvmdealloc(p->pagetable, sz, sz + n);
+    kvmdealloc(p->kpagetable, oldsz, oldsz + n);
   }
   p->sz = sz;
   return 0;
@@ -305,6 +306,9 @@ fork(void)
   np->sz = p->sz;
 
   np->parent = p;
+
+  // lab part3.
+  utokcopy(np->pagetable, np->kpagetable, 0, np->sz);
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);

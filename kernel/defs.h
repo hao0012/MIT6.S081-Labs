@@ -142,7 +142,7 @@ int             argint(int, int*);
 int             argstr(int, char*, int);
 int             argaddr(int, uint64 *);
 int             fetchstr(uint64, char*, int);
-int             fetchaddr(uint64, uint64*);
+int             fetchaddr(uint64 addr, uint64 *ip);
 void            syscall();
 
 // trap.c
@@ -178,7 +178,7 @@ void            uvmunmap(pagetable_t, uint64, uint64, int);
 void            uvmclear(pagetable_t, uint64);
 uint64          walkaddr(pagetable_t, uint64);
 int             copyout(pagetable_t, uint64, char *, uint64);
-int             copyin(pagetable_t, char *, uint64, uint64);
+int             copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len);
 int             copyinstr(pagetable_t, char *, uint64, uint64);
 
 pte_t *         walk(pagetable_t, uint64, int);
@@ -187,6 +187,9 @@ void            vmprint(pagetable_t);
 void            kernel_map(pagetable_t, uint64, uint64, uint64, int);
 void            k_pagetable_init(pagetable_t *);
 void            k_freewalk(pagetable_t);
+
+int             utokcopy(pagetable_t u, pagetable_t k, uint64 from, uint64 sz);
+uint64          kvmdealloc(pagetable_t k, uint64 oldsz, uint64 newsz);
 
 // plic.c
 void            plicinit(void);

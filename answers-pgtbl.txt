@@ -1,0 +1,2 @@
+q1: page 0 contains data and text, page 1 is guard page, so it can not be used by user, page 2 is stack.
+q2: the test3 is to avoid len < 0, case: srcva and srcva + len is in range and len < 0.

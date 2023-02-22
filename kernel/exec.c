@@ -9,6 +9,8 @@
 
 static int loadseg(pde_t *pgdir, uint64 addr, struct inode *ip, uint offset, uint sz);
 
+extern struct proc proc[NPROC];
+
 int
 exec(char *path, char **argv)
 {
@@ -50,6 +52,8 @@ exec(char *path, char **argv)
       goto bad;
     uint64 sz1;
     if((sz1 = uvmalloc(pagetable, sz, ph.vaddr + ph.memsz)) == 0)
+      goto bad;
+    if (sz1 >= PLIC)
       goto bad;
     sz = sz1;
     if(ph.vaddr % PGSIZE != 0)
@@ -107,6 +111,10 @@ exec(char *path, char **argv)
     if(*s == '/')
       last = s+1;
   safestrcpy(p->name, last, sizeof(p->name));
+
+  // lab part3
+  uvmunmap(p->kpagetable, 0, PGROUNDUP(oldsz) / PGSIZE, 0);
+  utokcopy(pagetable, p->kpagetable, 0, sz);
     
   // Commit to the user image.
   oldpagetable = p->pagetable;
