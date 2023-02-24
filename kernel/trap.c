@@ -29,6 +29,49 @@ trapinithart(void)
   w_stvec((uint64)kernelvec);
 }
 
+static void tf_copying(struct proc *p) {
+  struct trapframe *o = p->trapframe;
+  struct trapframe *c = p->tf_copy;
+
+  c->a0 = o->a0;
+  c->a1 = o->a1;
+  c->a2 = o->a2;
+  c->a3 = o->a3;
+  c->a4 = o->a4;
+  c->a5 = o->a5;
+  c->a6 = o->a6;
+  c->a7 = o->a7;
+
+  c->epc = o->epc;
+  c->gp = o->gp;
+  c->ra = o->ra;
+  
+  c->s0 = o->s0;
+  c->s1 = o->s1;
+  c->s2 = o->s2;
+  c->s3 = o->s3;
+  c->s4 = o->s4;
+  c->s5 = o->s5;
+  c->s6 = o->s6;
+  c->s7 = o->s7;
+  c->s8 = o->s8;
+  c->s9 = o->s9;
+  c->s10 = o->s10;
+  c->s11 = o->s11;
+
+  c->sp = o->sp;
+  
+  c->t0 = o->t0;
+  c->t1 = o->t1;
+  c->t2 = o->t2;
+  c->t3 = o->t3;
+  c->t4 = o->t4;
+  c->t5 = o->t5;
+  c->t6 = o->t6;
+
+  c->tp = o->tp;
+}
+
 //
 // handle an interrupt, exception, or system call from user space.
 // called from trampoline.S
@@ -67,6 +110,23 @@ usertrap(void)
     syscall();
   } else if((which_dev = devintr()) != 0){
     // ok
+
+    // clock intrrupt
+    struct proc *p = myproc();
+    if (which_dev == 2 && p->ticks > 0) { // clock intrrupt and open sigalarm
+      p->ticks_left--;
+      
+      if (p->handling == 0 && p->ticks_left <= 0) {
+        // save original return address in ra 
+        // p->trapframe->ra = p->trapframe->epc;
+        // set sepc to handler function
+        tf_copying(p);
+        p->trapframe->epc = (uint64)p->handler;
+        p->handling = 1;
+        // recover ticks_left for next alarm
+        p->ticks_left += p->ticks;
+      }
+    }
   } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
