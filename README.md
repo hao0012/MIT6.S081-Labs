@@ -6,3 +6,6 @@
 
 # pgtbl:
 ![pgtbl](img/pgtbl.png)
+
+# traps:
+![traps](img/traps.png)
