@@ -9,3 +9,6 @@
 
 # traps:
 ![traps](img/traps.png)
+
+# lazy:
+![lazy](img/lazy.png)
