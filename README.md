@@ -12,3 +12,6 @@
 
 # lazy:
 ![lazy](img/lazy.png)
+
+# cow:
+![cow](img/cow.png)
