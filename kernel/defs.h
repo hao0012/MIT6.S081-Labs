@@ -185,3 +185,9 @@ void            virtio_disk_intr(void);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+
+void incr(void *);
+void *copy_page(void *pa);
+
+int isCOW(uint64 va);
+int cowcopy(uint64 va);
